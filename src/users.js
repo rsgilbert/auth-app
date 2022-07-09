@@ -1,4 +1,4 @@
-const { Client, ClientBase } = require('pg')
+const { Client } = require('pg')
 
 async function dbClient() {
     const client = new Client({
@@ -47,4 +47,4 @@ async function insertUser(email, hashedPassword) {
 // .then(v => console.log('inserted, result is',v))
 // .catch(e => console.error(e))
 
-userList().then(console.log)
+userList().then(console.log);
