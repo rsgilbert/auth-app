@@ -21,6 +21,7 @@ async function query(fn) {
     const client = await dbClient()
     const res = await fn(client);
     client.end()
+    // console.log(res)
     return res.rows;
 }
 

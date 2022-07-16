@@ -23,13 +23,6 @@ async function query(fn) {
     return res.rows;
 }
 
-async function userList() {
-    const rows = await query((client) => {
-        return client.query('SELECT * FROM users')
-    });
-    // console.log(rows)
-    return rows;
-}
 
 async function insertUser(email, hashedPassword) {
     const userId = new Date().getTime(); 
@@ -46,5 +39,3 @@ async function insertUser(email, hashedPassword) {
 // insertUser('chuck@norris.com', 'chucky')
 // .then(v => console.log('inserted, result is',v))
 // .catch(e => console.error(e))
-
-userList().then(console.log);
