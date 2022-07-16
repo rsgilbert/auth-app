@@ -3,10 +3,11 @@ const passport = require('passport');
 
 
 const userRouter = express.Router();
-userRouter.use(passport.authenticate('bearer'));
+userRouter.use(passport.authenticate('bearer', { session: false }));
 
 userRouter.get('/user', (req, res) => {
-    res.send('user');
+    console.log(req);
+    res.send(req.user);
 });
 
 

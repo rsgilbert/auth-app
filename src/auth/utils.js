@@ -15,16 +15,36 @@ function authenticationMiddleware() {
 };
 
 function decodeToken(token) {
-    const publicKey = fs.readFileSync(path.join(__dirname, 'keys/public-key.pem')).toString();
+    const publicKey = fs.readFileSync('./keys/public-key.pem').toString();
     return jwt.verify(token, publicKey);
 }
 
-async function passwordMatch(plainPassword, hashedPassword) {
-    return bcrypt.compare(plainPassword, hashedPassword);
+function generateToken(payload) {
+    const privateKey = fs.readFileSync('./keys/private-key.pem').toString();
+    return jwt.sign(payload, privateKey, { algorithm: 'RS256', expiresIn: '5m' });
+}
+
+function hashPassword(plainPassword) {
+    return bcrypt.hashSync(plainPassword, 10);
+}
+
+function passwordMatch(plainPassword, hashedPassword) {
+    return bcrypt.compareSync(plainPassword, hashedPassword);
+}
+
+function confirmationCode() {
+    return `${randomDigit()}${randomDigit()}${randomDigit()}${randomDigit()}`;
+}
+
+function randomDigit() {
+    return Math.floor(Math.random() * 10);
 }
 
 module.exports = {
     decodeToken, 
-    passwordMatch
+    generateToken,
+    passwordMatch,
+    hashPassword,
+    confirmationCode
 }
 
