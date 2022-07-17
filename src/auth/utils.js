@@ -32,7 +32,7 @@ function passwordMatch(plainPassword, hashedPassword) {
     return bcrypt.compareSync(plainPassword, hashedPassword);
 }
 
-function confirmationCode() {
+function generateConfirmationCode() {
     return `${randomDigit()}${randomDigit()}${randomDigit()}${randomDigit()}`;
 }
 
@@ -45,6 +45,6 @@ module.exports = {
     generateToken,
     passwordMatch,
     hashPassword,
-    confirmationCode
+    generateConfirmationCode
 }
 

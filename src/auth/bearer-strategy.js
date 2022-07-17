@@ -1,4 +1,4 @@
-const query = require('../query.js');
+const query = require('../db.js');
 const { Strategy: BearerStrategy } = require('passport-http-bearer');
 const { decodeToken } = require('./utils.js');
 
