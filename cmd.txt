@@ -13,4 +13,9 @@ eb deploy
 // Check to confirm that this app has been deployed
 eb deploy 
 
+// Workflow for deploying changes
+git add .
+git commit -m "made change xxx"
+eb deploy
+
 
