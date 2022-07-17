@@ -1,0 +1,16 @@
+// initialize eb project
+eb init 
+
+// create environment based on sample application 
+eb create auth-app-dev-env --sample 
+
+// Check to confirm that an app has been created though its a sample app
+eb open 
+
+// Deploy this application
+eb deploy
+
+// Check to confirm that this app has been deployed
+eb deploy 
+
+
