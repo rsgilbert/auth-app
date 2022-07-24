@@ -7,3 +7,5 @@ src/auth/keys/
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 db-backups/
+build/
+.DS_Store

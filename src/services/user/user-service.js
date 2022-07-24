@@ -5,9 +5,6 @@ const db = require('../../db.js');
 const { sendEmailNotification } = require('../mail/mail-service.js');
 
 
-function generateUserToken(user) {
-    return generateToken({ user_id: user['user_id'], email: user['email'] });
-}
 // to be moved to a user service
 async function selectUserByEmail(email) {
     const stmt = 'SELECT * FROM users WHERE email = $1';
@@ -49,14 +46,35 @@ async function sendConfirmationCodeEmailNotification(user) {
         recipientList: [email],
         ccList: [],
         subject: 'Confirmation Code',
-        html: `<p>Your confirmaton code is ${confirmation_code}`
+        html: `<p>Your confirmaton code is ${confirmation_code}</p>`
     });
 }
 
+async function createRefreshToken(user) {
+    const refreshToken = new Date().getTime().toString()
+    const stmt = "UPDATE users SET refresh_token = $1 WHERE user_id = $2"
+    const values = [refreshToken, user.user_id]
+    await db.query(client => client.query(stmt, values))
+    return refreshToken
+}
+
+/**
+ *
+ * @param { string } refreshToken
+ * @returns {Promise<void>}
+ */
+async function createAuthToken(refreshToken) {
+    const stmt = "SELECT * FROM users WHERE refresh_token = $1"
+    const values = [refreshToken]
+    const [user] = await db.query(client => client.query(stmt, values))
+    if(!user) { throw Error("No user with given refresh token")}
+    return generateToken({ user_id: user['user_id'], email: user['email'] });
+}
 
 module.exports = {
     insertUser,
     confirmUserByEmail,
     selectUserByEmail,
-    generateUserToken
+    createAuthToken,
+    createRefreshToken
 }
