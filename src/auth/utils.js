@@ -21,7 +21,7 @@ function decodeToken(token) {
 
 function generateToken(payload) {
     const privateKey = fs.readFileSync('./keys/private-key.pem').toString();
-    return jwt.sign(payload, privateKey, { algorithm: 'RS256', expiresIn: '5m' });
+    return jwt.sign(payload, privateKey, { algorithm: 'RS256', expiresIn: '1h' });
 }
 
 function hashPassword(plainPassword) {
