@@ -28,7 +28,7 @@ authRouter.post('/login',
             if (isPasswordMatch) {
                 const refreshToken = await userService.createRefreshToken(user);
                 console.log('refresh token is', refreshToken)
-                return res.send(refreshToken);
+                return res.json({ "refresh_token": refreshToken });
             } else {
                 res.statusCode = 401;
                 res.statusMessage = 'Wrong password';
@@ -95,7 +95,7 @@ authRouter.post("/auth-token",
         try {
             const refreshToken = req.body['refresh_token']
             const authToken = await userService.createAuthToken(refreshToken)
-            return res.send(authToken)
+            return res.json({ "auth_token": authToken })
         } catch (e) {
             res.statusCode = 500;
             res.statusMessage = e.message;
