@@ -24,6 +24,11 @@ authRouter.post('/login',
             }
             const {email, password} = req.body;
             const user = await selectUserByEmail(email);
+            if(!user['confirmed']) {
+                res.statusCode = 401;
+                res.statusMessage = "User Not Confirmed"
+                res.send("User Not Confirmed")
+            }
             const isPasswordMatch = passwordMatch(password, user['hashed_password']);
             if (isPasswordMatch) {
                 const refreshToken = await userService.createRefreshToken(user);
