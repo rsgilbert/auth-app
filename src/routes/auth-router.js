@@ -2,7 +2,6 @@ const express = require('express');
 const {passwordMatch} = require('../auth/utils');
 const {
     selectUserByEmail,
-    generateUserToken,
     insertUser,
     confirmUserByEmail
 } = require('../services/user/user-service.js');
@@ -27,7 +26,7 @@ authRouter.post('/login',
             if(!user['confirmed']) {
                 res.statusCode = 401;
                 res.statusMessage = "User Not Confirmed"
-                res.send("User Not Confirmed")
+                return res.send("User Not Confirmed")
             }
             const isPasswordMatch = passwordMatch(password, user['hashed_password']);
             if (isPasswordMatch) {
@@ -40,6 +39,7 @@ authRouter.post('/login',
                 return res.send('Wrong password');
             }
         } catch (e) {
+            console.error(e)
             res.statusCode = 500;
             res.statusMessage = e.message;
             return res.send(e.message);
@@ -67,15 +67,21 @@ authRouter.post('/signup',
         }
     });
 
-authRouter.post('/confirm', async (req, res) => {
+authRouter.post('/confirm', 
+body("email").isEmail(),
+body("confirmation_code").isLength({min: 4, max: 4}),async (req, res) => {
     try {
-        const {confirmationCode, email} = req.body;
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({errors: errors.array()});
+        }
+        const {confirmation_code, email} = req.body;
         let user = await selectUserByEmail(email);
         console.log(user);
         if (user.confirmed) {
             return res.end();
         }
-        if (user.confirmation_code === confirmationCode) {
+        if (user.confirmation_code === confirmation_code) {
             user = confirmUserByEmail(email);
             return res.end();
         } else {

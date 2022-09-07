@@ -27,14 +27,48 @@ async function confirmUserByEmail(email) {
     return user;
 }
 
+/**
+ * 
+ * @param {string} email 
+ * @param {string} plainPassword 
+ * @returns {Promise<User>}
+ */
 async function insertUser(email, plainPassword) {
     const user = await db.transaction(async tQuery => {
-        const userId = new Date().getTime();
-        const stmt = 'INSERT INTO users(user_id, email, hashed_password, confirmation_code) VALUES($1, $2, $3, $4) RETURNING *';
-        const values = [userId, email, hashPassword(plainPassword), generateConfirmationCode()];
-        const [user] = await tQuery(client => client.query(stmt, values));
-        await sendConfirmationCodeEmailNotification(user);
-        return user;
+        // check if a user already exists
+        let stmt = 'SELECT * FROM users WHERE email = $1'
+        let values = [email] 
+        /** @type [User] */
+        let [user] = await tQuery(client => client.query(stmt, values));
+        if(!user) {
+            // no such user, create the user
+            const userId = new Date().getTime().toString();
+            stmt = 'INSERT INTO users(user_id, email, hashed_password, confirmation_code) VALUES($1, $2, $3, $4) RETURNING *';
+            values = [userId, email, hashPassword(plainPassword), generateConfirmationCode()];
+            [user] = await tQuery(client => client.query(stmt, values));
+            await sendConfirmationCodeEmailNotification(user);
+            return user;
+        }
+        if(user?.confirmed) {
+            throw Error(`User with email ${email} already exists and has been confirmed. Consider resetting password`);
+        }
+        if(user?.confirmed === false) {
+            // user exists but has not yet been confirmed
+            // We update the password and send new confirmation code
+            stmt = 'UPDATE users SET hashed_password = $1 WHERE email = $2';
+            values = [hashPassword(plainPassword), email];
+            await tQuery(client => client.query(stmt, values));
+            // update confirmation code
+            stmt = 'UPDATE users SET confirmation_code = $1 WHERE email = $2';
+            values = [generateConfirmationCode(), email];
+            await tQuery(client => client.query(stmt, values));
+            await sendConfirmationCodeEmailNotification(user);
+            stmt = 'SELECT * FROM users WHERE email=$1';
+            values = [email];
+            user = await tQuery(client => client.query(stmt, values));
+            return user;
+        }
+        throw Error('Illegal state');
     });
     console.log('inserted user', user);
     return user;
@@ -61,7 +95,7 @@ async function createRefreshToken(user) {
 /**
  *
  * @param { string } refreshToken
- * @returns {Promise<void>}
+ * @returns {Promise<string>}
  */
 async function createAuthToken(refreshToken) {
     const stmt = "SELECT * FROM users WHERE refresh_token = $1"
