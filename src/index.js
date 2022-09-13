@@ -4,11 +4,13 @@ const bearerStrategy = require('./auth/bearer-strategy.js');
 const authRouter = require('./routes/auth-router.js');
 const userRouter = require('./routes/user-router.js');
 const morgan = require('morgan');
+const cors = require('cors');
 
 passport.use(bearerStrategy);
 const app = express();
 app.use(morgan('tiny', { immediate: true })); // log the moment request hits the server
 app.use(morgan('tiny'));
+app.use(cors());
 app.use(express.json());
 
 app.use('/auth', authRouter);
