@@ -1,61 +1,37 @@
 const express = require('express');
-const {passwordMatch} = require('../auth/utils');
+const { passwordMatch } = require('../auth/utils');
 const {
     selectUserByEmail,
     insertUser,
     confirmUserByEmail
 } = require('../services/user/user-service.js');
 const userService = require('../services/user/user-service');
-const {body, validationResult} = require('express-validator');
+const { body, validationResult } = require('express-validator');
+const passport = require('passport');
+const { expressValidatorHandler } = require('./router-utils');
 
 const authRouter = express.Router();
 
-// full path will be /auth/login
-// Creates and returns a refresh token that the user can use to request for access/auth tokens
 authRouter.post('/login',
     body("email").isEmail(),
-    body("password").isLength({min: 2}),
-    async (req, res) => {
-        try {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return res.status(400).json({errors: errors.array()});
-            }
-            const {email, password} = req.body;
-            const user = await selectUserByEmail(email);
-            if(!user['confirmed']) {
-                res.statusCode = 401;
-                res.statusMessage = "User Not Confirmed"
-                return res.send("User Not Confirmed")
-            }
-            const isPasswordMatch = passwordMatch(password, user['hashed_password']);
-            if (isPasswordMatch) {
-                const refreshToken = await userService.createRefreshToken(user);
-                console.log('refresh token is', refreshToken)
-                return res.json({ "refresh_token": refreshToken });
-            } else {
-                res.statusCode = 401;
-                res.statusMessage = 'Wrong password';
-                return res.send('Wrong password');
-            }
-        } catch (e) {
-            console.error(e)
-            res.statusCode = 500;
-            res.statusMessage = e.message;
-            return res.send(e.message);
-        }
-    });
+    body("password").isLength({ min: 2 }),
+    expressValidatorHandler,
+    passport.authenticate('local'),
+    function (req, res) {
+        console.log(req.user)
+        return res.send('successfully logged in')
+    })
 
 authRouter.post('/signup',
     body("email").isEmail(),
-    body("password").isLength({min: 5}),
+    body("password").isLength({ min: 5 }),
     async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({errors: errors.array()});
+            return res.status(400).json({ errors: errors.array() });
         }
         try {
-            const {email, password} = req.body;
+            const { email, password } = req.body;
             const user = await insertUser(email, password);
             // console.log(user);
             res.statusCode = 201;
@@ -67,52 +43,35 @@ authRouter.post('/signup',
         }
     });
 
-authRouter.post('/confirm', 
-body("email").isEmail(),
-body("confirmation_code").isLength({min: 4, max: 4}),async (req, res) => {
-    try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({errors: errors.array()});
-        }
-        const {confirmation_code, email} = req.body;
-        let user = await selectUserByEmail(email);
-        console.log(user);
-        if (user.confirmed) {
-            return res.end();
-        }
-        if (user.confirmation_code === confirmation_code) {
-            user = confirmUserByEmail(email);
-            return res.end();
-        } else {
-            res.statusCode = 400;
-            res.statusMessage = 'Wrong confirmation code';
-            return res.send('Wrong confirmation code');
-        }
-    } catch (e) {
-        res.statusCode = 500;
-        res.statusMessage = e.message;
-        return res.send(e.message);
-    }
-});
-
-authRouter.post("/auth-token",
-    body("refresh_token").isLength({min: 5}),
-    async function (req, res) {
-    const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({errors: errors.array()});
-        }
+authRouter.post('/confirm',
+    body("email").isEmail(),
+    body("confirmation_code").isLength({ min: 4, max: 4 }), async (req, res) => {
         try {
-            const refreshToken = req.body['refresh_token']
-            const authToken = await userService.createAuthToken(refreshToken)
-            return res.json({ "auth_token": authToken })
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
+            }
+            const { confirmation_code, email } = req.body;
+            let user = await selectUserByEmail(email);
+            console.log(user);
+            if (user.confirmed) {
+                return res.end();
+            }
+            if (user.confirmation_code === confirmation_code) {
+                user = confirmUserByEmail(email);
+                return res.end();
+            } else {
+                res.statusCode = 400;
+                res.statusMessage = 'Wrong confirmation code';
+                return res.send('Wrong confirmation code');
+            }
         } catch (e) {
             res.statusCode = 500;
             res.statusMessage = e.message;
             return res.send(e.message);
         }
     });
+
 
 
 module.exports = authRouter;

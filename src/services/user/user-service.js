@@ -62,10 +62,10 @@ async function insertUser(email, plainPassword) {
             stmt = 'UPDATE users SET confirmation_code = $1 WHERE email = $2';
             values = [generateConfirmationCode(), email];
             await tQuery(client => client.query(stmt, values));
-            await sendConfirmationCodeEmailNotification(user);
             stmt = 'SELECT * FROM users WHERE email=$1';
             values = [email];
-            user = await tQuery(client => client.query(stmt, values));
+            [user] = await tQuery(client => client.query(stmt, values));
+            await sendConfirmationCodeEmailNotification(user);
             return user;
         }
         throw Error('Illegal state');
