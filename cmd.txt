@@ -18,4 +18,7 @@ git add .
 git commit -m "made change xxx"
 eb deploy
 
+// add a column to a table 
+ALTER TABLE no_series ADD COLUMN prefix VARCHAR(20);
+
 

@@ -7,7 +7,7 @@ const {
 const { body } = require('express-validator');
 const passport = require('passport');
 const { expressValidatorHandler } = require('./router-utils');
-const http = require('@passioncloud/http')
+const http = require('@passioncloud/http');
 
 const authRouter = express.Router();
 
@@ -40,36 +40,25 @@ authRouter.post('/signup',
 authRouter.post('/confirm',
     body("email").isEmail(),
     body("confirmation_code").isLength({ min: 4, max: 4 }),
-    expressValidatorHandler, 
-    async (req, res) => {
+    expressValidatorHandler,
+    async (req, res, next) => {
         try {
-            const { confirmation_code, email } = req.body;
-            let user = await selectUserByEmail(email);
-            console.log(user);
-            if (user.confirmed) {
-                return res.end();
-            }
-            if (user.confirmation_code === confirmation_code) {
-                user = confirmUserByEmail(email);
-                return res.end();
-            } else {
-                res.statusCode = http.statusCodes.BAD_REQUEST;
-                return res.send('Wrong confirmation code');
-            }
+            const { email, confirmation_code } = req.body
+            await confirmUserByEmail(email, confirmation_code)
+            res.status(http.statusCodes.OK).end()
         } catch (e) {
-            res.statusCode = http.statusCodes.INTERNAL_SERVER_ERROR;
-            return res.send(e.message);
+            next(e)
         }
     });
 
-authRouter.post("/logout", 
-    passport.session(), 
+authRouter.post("/logout",
+    passport.session(),
     async (req, res, next) => {
-    req.logOut(err => {
-        if(err) next(err)
+        req.logOut(err => {
+            if (err) next(err)
+        })
+        res.status(http.statusCodes.NO_CONTENT).end()
     })
-    res.status(http.statusCodes.NO_CONTENT).end()
-})
 
 
 module.exports = authRouter;

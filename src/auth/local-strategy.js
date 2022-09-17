@@ -2,18 +2,13 @@ const db = require('../db.js')
 
 const { Strategy: LocalStrategy } = require('passport-local')
 const { passwordMatch } = require('./utils')
+const { selectUserByEmail } = require('../services/user/user-service.js')
 
 const localStrategy = new LocalStrategy({
     usernameField: 'email' // client supplies email field in request body
 }, async (username, password, done) => {
     try{
-        const stmt = 'SELECT * FROM users WHERE email = ?'
-        const values = [username]
-        /** @type {User[]} */
-        const [user] = await db.query(client => client.query(stmt, values))
-        if(!user) {
-            throw Error('No user found with email ' + username)
-        }
+        const user = await selectUserByEmail(username)
         if(!user.confirmed) {
             throw Error('User is not confirmed')
         }

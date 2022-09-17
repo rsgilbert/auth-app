@@ -8,20 +8,27 @@ const dbConnection = async () => {
         database: dbConfig.db.database,
         user: dbConfig.db.user,
         password: dbConfig.db.password,
-        trace: true
+        trace: true,
+        bigIntAsNumber: true,
+        decimalAsNumber: true,
     })
 }
 
-
 /**
  * 
- * @param {(client: mariadb.Connection) => Promise<any>} fn 
+ * @param {(conn: mariadb.Connection) => Promise<any>} fn 
  * @returns { Promise<any[]> }
  */
 async function query(fn) {
-    const res = await fn(await dbConnection());
-    delete res.meta 
-    return res 
+    const conn = await dbConnection()
+    try {
+        const res = await fn(conn)
+        delete res.meta 
+        return res 
+    }
+    finally {
+        conn.end()
+    }
 }
 
 /**
@@ -35,13 +42,15 @@ async function transaction(fn) {
     try {
         const result = await fn(transactionQuery);
         await conn.query("COMMIT");
-        conn.end();
         return result;
     }
     catch (e) {
         console.log('rolling back. Error is:', e.message);
         await conn.query("ROLLBACK");
         throw e;
+    }
+    finally {
+        conn.end()
     }
     async function transactionQuery(fn) {
         const res = await fn(conn);
