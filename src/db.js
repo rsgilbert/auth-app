@@ -1,4 +1,3 @@
-const { Client } = require('pg')
 const mariadb = require('mariadb')
 const dbConfig = require('./db.config.json.js');
 
@@ -12,7 +11,6 @@ const dbConnection = async () => {
         trace: true
     })
 }
-
 
 
 /**

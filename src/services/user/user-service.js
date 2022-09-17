@@ -1,5 +1,5 @@
 
-const { hashPassword, generateToken, generateConfirmationCode } = require('../../auth/utils.js');
+const { hashPassword, generateConfirmationCode } = require('../../auth/utils.js');
 const  { query } = require('../../db.js');
 const db = require('../../db.js');
 const { sendEmailNotification } = require('../mail/mail-service.js');
@@ -84,31 +84,9 @@ async function sendConfirmationCodeEmailNotification(user) {
     });
 }
 
-async function createRefreshToken(user) {
-    const refreshToken = new Date().getTime().toString()
-    const stmt = "UPDATE users SET refresh_token = ? WHERE user_id = ?"
-    const values = [refreshToken, user.user_id]
-    await db.query(client => client.query(stmt, values))
-    return refreshToken
-}
-
-/**
- *
- * @param { string } refreshToken
- * @returns {Promise<string>}
- */
-async function createAuthToken(refreshToken) {
-    const stmt = "SELECT * FROM users WHERE refresh_token = ?"
-    const values = [refreshToken]
-    const [user] = await db.query(client => client.query(stmt, values))
-    if(!user) { throw Error("No user with given refresh token")}
-    return generateToken({ user_id: user['user_id'], email: user['email'] });
-}
 
 module.exports = {
     insertUser,
     confirmUserByEmail,
-    selectUserByEmail,
-    createAuthToken,
-    createRefreshToken
+    selectUserByEmail
 }

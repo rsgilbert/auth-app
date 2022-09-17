@@ -1,11 +1,22 @@
-const { describe, expect, it } = require('@jest/globals');
-const { confirmationCode } = require('../src/auth/utils');
+const { describe, expect, it, test } = require('@jest/globals');
+const { generateConfirmationCode } = require('../src/auth/utils');
+
 
 describe('utils', () => {
-    it('generates a random confirmation code', () => {
-        const code1 = confirmationCode();
-        const code2 = confirmationCode();
-        console.log(code1);
-        expect(code1).not.toEqual(code2);
-    });
+    describe('generateConfirmationCode()', () => {
+        test('result is random', () => {
+            const code1 = generateConfirmationCode();
+            const code2 = generateConfirmationCode();
+            expect(code1).not.toEqual(code2);
+        })
+        test('result is a string of digits', () => {
+            const result = generateConfirmationCode()
+            for(let d of result) {
+                expect(Number(d)).not.toBeNaN()
+            }
+        })
+        test('result is 4 digits', () => {
+            expect(generateConfirmationCode()).toHaveLength(4)
+        })
+    })
 })

@@ -1,6 +1,5 @@
 const express = require('express')
 const passport = require('passport');
-const bearerStrategy = require('./auth/bearer-strategy.js');
 const localStrategy = require('./auth/local-strategy.js')
 const authRouter = require('./routes/auth-router.js');
 const userRouter = require('./routes/user-router.js');
@@ -9,10 +8,9 @@ const cors = require('cors');
 const session = require('express-session')
 const { serializeUserHandler, deserializeUserHandler } = require('./auth/passport-handlers.js');
 const { body } = require('express-validator');
-const { expressValidatorHandler, checkAuthenticationHandler, logErrorHandler, handleError } = require('./routes/router-utils.js');
+const { logErrorHandler, handleError } = require('./routes/router-utils.js');
 
 passport.use(localStrategy)
-passport.use(bearerStrategy);
 passport.serializeUser(serializeUserHandler)
 passport.deserializeUser(deserializeUserHandler)
 const app = express();
@@ -23,7 +21,6 @@ app.use(session({
     saveUninitialized: false,
     cookie:{maxAge: 1000 * 60 * 10 } // expires in 10 mins
 }))
-
 
 
 app.use(morgan('tiny', { immediate: true })); // log the moment request hits the server
@@ -39,8 +36,6 @@ app.get('/', (req, res) => res.send('Success, running'));
 app.get('/test', (req, res) => {
     res.send("Test successful. App is running.")
 });
-
-
 
 // error handler middleware come last
 app.use(logErrorHandler);

@@ -1,9 +1,11 @@
 const {validationResult} = require("express-validator");
+const http = require('@passioncloud/http')
+
 
 function expressValidatorHandler(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({errors: errors.array()});
+        return res.status(http.statusCodes.BAD_REQUEST).json({errors: errors.array()});
     }
     next();
 }
@@ -12,7 +14,7 @@ const checkAuthenticationHandler = (req, res, next) => {
     if(req.isAuthenticated()) {
         return next()
     }
-    res.statusCode = 401
+    res.statusCode = http.statusCodes.UNAUTHORIZED
     return res.send('Not authenticated')
 }
 
@@ -23,7 +25,7 @@ const logErrorHandler = (err, req, res, next) => {
 }
 
 const handleError = (err, req, res, next) => {
-    res.statusCode = 500;
+    res.statusCode = http.statusCodes.INTERNAL_SERVER_ERROR
     res.json({ error: err.message });
 }
 
