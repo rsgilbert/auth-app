@@ -7,11 +7,7 @@ const passport = require('passport')
  */
 async function serializeUserHandler(user, cb) {
     console.log('serializing user', user)
-    process.nextTick(() => cb(null, {
-        id: 'james_id',
-        username: 'gil',
-        picture: 'http://x'
-    }))
+    cb(null, user)
 }
 
 /**
@@ -21,7 +17,7 @@ async function serializeUserHandler(user, cb) {
  */
  async function deserializeUserHandler(user, cb) {
     console.log('deserializing user', user)
-    process.nextTick(() => cb(null, user))
+    cb(null, user)
 }
 
 

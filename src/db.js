@@ -1,28 +1,29 @@
 const { Client } = require('pg')
+const mariadb = require('mariadb')
 const dbConfig = require('./db.config.json.js');
 
-async function dbClient() {
-    const client = new Client({
+
+const dbConnection = async () => {
+    return mariadb.createConnection({
         host: dbConfig.db.host,
         database: dbConfig.db.database,
         user: dbConfig.db.user,
-        password: dbConfig.db.password
-    });
-    await client.connect()
-    return client;
+        password: dbConfig.db.password,
+        trace: true
+    })
 }
+
+
 
 /**
  * 
- * @param {(client: Client) => Promise<any>} fn 
+ * @param {(client: mariadb.Connection) => Promise<any>} fn 
  * @returns { Promise<any[]> }
  */
 async function query(fn) {
-    const client = await dbClient()
-    const res = await fn(client);
-    client.end()
-    // console.log(res)
-    return res.rows;
+    const res = await fn(await dbConnection());
+    delete res.meta 
+    return res 
 }
 
 /**
@@ -31,22 +32,23 @@ async function query(fn) {
  * @returns { Promise<any> }
  */
 async function transaction(fn) {
-    const client = await dbClient()
-    await client.query('BEGIN');
+    const conn = await dbConnection()
+    await conn.query('BEGIN');
     try {
         const result = await fn(transactionQuery);
-        await client.query("COMMIT");
-        client.end();
+        await conn.query("COMMIT");
+        conn.end();
         return result;
     }
-    catch(e) {
+    catch (e) {
         console.log('rolling back. Error is:', e.message);
-        await client.query("ROLLBACK");
+        await conn.query("ROLLBACK");
         throw e;
     }
     async function transactionQuery(fn) {
-        const res = await fn(client);
-        return res.rows;
+        const res = await fn(conn);
+        delete res.meta
+        return res
     }
 }
 

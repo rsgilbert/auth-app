@@ -4,5 +4,4 @@ interface User {
     hashed_password: string;
     confirmation_code: string;
     confirmed: boolean;
-    refresh_token: string;
 }

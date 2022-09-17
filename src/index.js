@@ -25,6 +25,7 @@ app.use(session({
 }))
 
 
+
 app.use(morgan('tiny', { immediate: true })); // log the moment request hits the server
 app.use(morgan('tiny'));
 app.use(cors());
@@ -36,9 +37,7 @@ app.use('/user', userRouter);
 app.get('/', (req, res) => res.send('Success, running'));
 
 app.get('/test', (req, res) => {
-    console.log(req.headers.cookie)
-    console.log(req.user)
-    res.send("Test successful. App is running. Cookies are " + JSON.stringify(req.headers.cookie))
+    res.send("Test successful. App is running.")
 });
 
 

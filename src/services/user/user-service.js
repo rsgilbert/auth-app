@@ -7,7 +7,7 @@ const { sendEmailNotification } = require('../mail/mail-service.js');
 
 // to be moved to a user service
 async function selectUserByEmail(email) {
-    const stmt = 'SELECT * FROM users WHERE email = $1';
+    const stmt = 'SELECT * FROM users WHERE email = ?';
     const values = [email];
     const [user] = await query(client => client.query(stmt, values));
     if(!user) throw Error('No user with email ' + email);
@@ -15,13 +15,13 @@ async function selectUserByEmail(email) {
 }
 
 async function confirmUserByEmail(email) {
-    let stmt = 'UPDATE users SET confirmation_code = $1 WHERE email = $2';
+    let stmt = 'UPDATE users SET confirmation_code = ? WHERE email = ?';
     let values = ['', email];
     await query(c => c.query(stmt, values));
-    stmt = 'UPDATE users SET confirmed = true WHERE email = $1';
+    stmt = 'UPDATE users SET confirmed = true WHERE email = ?';
     values = [email];
     await query(c => c.query(stmt, values));
-    stmt = 'SELECT * FROM users WHERE email = $1';
+    stmt = 'SELECT * FROM users WHERE email = ?';
     values = [email];
     const [user] = await query(c => c.query(stmt, values));
     return user;
@@ -36,14 +36,14 @@ async function confirmUserByEmail(email) {
 async function insertUser(email, plainPassword) {
     const user = await db.transaction(async tQuery => {
         // check if a user already exists
-        let stmt = 'SELECT * FROM users WHERE email = $1'
+        let stmt = 'SELECT * FROM users WHERE email = ?'
         let values = [email] 
         /** @type [User] */
         let [user] = await tQuery(client => client.query(stmt, values));
         if(!user) {
             // no such user, create the user
             const userId = new Date().getTime().toString();
-            stmt = 'INSERT INTO users(user_id, email, hashed_password, confirmation_code) VALUES($1, $2, $3, $4) RETURNING *';
+            stmt = 'INSERT INTO users(user_id, email, hashed_password, confirmation_code) VALUES(?, ?, ?, ?) RETURNING *';
             values = [userId, email, hashPassword(plainPassword), generateConfirmationCode()];
             [user] = await tQuery(client => client.query(stmt, values));
             await sendConfirmationCodeEmailNotification(user);
@@ -55,14 +55,14 @@ async function insertUser(email, plainPassword) {
         if(user?.confirmed === false) {
             // user exists but has not yet been confirmed
             // We update the password and send new confirmation code
-            stmt = 'UPDATE users SET hashed_password = $1 WHERE email = $2';
+            stmt = 'UPDATE users SET hashed_password = ? WHERE email = ?';
             values = [hashPassword(plainPassword), email];
             await tQuery(client => client.query(stmt, values));
             // update confirmation code
-            stmt = 'UPDATE users SET confirmation_code = $1 WHERE email = $2';
+            stmt = 'UPDATE users SET confirmation_code = ? WHERE email = ?';
             values = [generateConfirmationCode(), email];
             await tQuery(client => client.query(stmt, values));
-            stmt = 'SELECT * FROM users WHERE email=$1';
+            stmt = 'SELECT * FROM users WHERE email=?';
             values = [email];
             [user] = await tQuery(client => client.query(stmt, values));
             await sendConfirmationCodeEmailNotification(user);
@@ -86,7 +86,7 @@ async function sendConfirmationCodeEmailNotification(user) {
 
 async function createRefreshToken(user) {
     const refreshToken = new Date().getTime().toString()
-    const stmt = "UPDATE users SET refresh_token = $1 WHERE user_id = $2"
+    const stmt = "UPDATE users SET refresh_token = ? WHERE user_id = ?"
     const values = [refreshToken, user.user_id]
     await db.query(client => client.query(stmt, values))
     return refreshToken
@@ -98,7 +98,7 @@ async function createRefreshToken(user) {
  * @returns {Promise<string>}
  */
 async function createAuthToken(refreshToken) {
-    const stmt = "SELECT * FROM users WHERE refresh_token = $1"
+    const stmt = "SELECT * FROM users WHERE refresh_token = ?"
     const values = [refreshToken]
     const [user] = await db.query(client => client.query(stmt, values))
     if(!user) { throw Error("No user with given refresh token")}

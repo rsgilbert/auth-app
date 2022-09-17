@@ -24,7 +24,6 @@ const logErrorHandler = (err, req, res, next) => {
 
 const handleError = (err, req, res, next) => {
     res.statusCode = 500;
-    res.statusMessage = err.message;
     res.json({ error: err.message });
 }
 
