@@ -87,6 +87,7 @@ async function insertUser(email, plainPassword) {
 
 
 async function sendConfirmationCodeEmailNotification(user) {
+    return // todo: remove
     const { email, confirmation_code } = user
     await sendEmailNotification({
         recipientList: [email],

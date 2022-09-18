@@ -15,24 +15,20 @@ authRouter.post('/login',
     body("email").isEmail(),
     body("password").isLength({ min: 2 }),
     expressValidatorHandler,
-    passport.authenticate('local'),
-    async (req, res) => {
-        return res.send('successfully logged in')
-    })
+    passport.authenticate('local'))
 
 authRouter.post('/signup',
     body("email").isEmail(),
     body("password").isLength({ min: 5 }),
     expressValidatorHandler,
-    async (req, res) => {
+    async (req, res, next) => {
         try {
             const { email, password } = req.body;
             await insertUser(email, password);
             res.statusCode = http.statusCodes.CREATED;
             return res.end();
         } catch (e) {
-            res.statusCode = http.statusCodes.BAD_REQUEST;
-            return res.send(e.message);
+            next(e)
         }
     });
 

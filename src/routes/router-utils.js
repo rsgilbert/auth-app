@@ -5,7 +5,10 @@ const http = require('@passioncloud/http')
 function expressValidatorHandler(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(http.statusCodes.BAD_REQUEST).json({errors: errors.array()});
+        const firstError = errors.array()[0]
+        console.log(firstError)
+        const msg = `Validation Error: ${firstError.param} -> ${firstError.msg}`
+        return res.status(http.statusCodes.BAD_REQUEST).json({error: msg});
     }
     next();
 }
