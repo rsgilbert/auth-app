@@ -8,7 +8,6 @@ userRouter.use(passport.authenticate('session'))
 userRouter.use(checkAuthenticationHandler)
 
 userRouter.get('/', (req, res) => {
-    console.log('user is', req.user)
     res.send(req.user);
 });
 

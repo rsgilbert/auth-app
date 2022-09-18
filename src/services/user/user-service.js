@@ -50,8 +50,12 @@ async function insertUser(email, plainPassword) {
         // check if a user already exists
         let stmt = 'SELECT * FROM users WHERE email = ?'
         let values = [email]
-        /** @type [User] */
-        let [user] = await tQuery(client => client.query(stmt, values));
+        /** @type User[] */
+        let [user] = await tQuery(conn => conn.query(stmt, values));
+        if (user?.confirmed) {
+            // user exists and has been confirmed confirmed
+            throw Error(`User with email ${email} already exists and has been confirmed. Consider resetting password`);
+        }
         if (!user) {
             // no such user, create the user
             const userId = await nextNoFor('users')
@@ -61,11 +65,7 @@ async function insertUser(email, plainPassword) {
             await sendConfirmationCodeEmailNotification(user);
             return user;
         }
-        // user exists 
-        if (user.confirmed) {
-            // user exists and has been confirmed confirmed
-            throw Error(`User with email ${email} already exists and has been confirmed. Consider resetting password`);
-        }
+
         // user exists but has not yet been confirmed
         // We update the password and send new confirmation code
         stmt = 'UPDATE users SET hashed_password = ? WHERE email = ?';

@@ -22,7 +22,6 @@ describe('no series', () => {
         })
         test('returns a string', async () => {
             const result = await nextNoFor('test_nos')
-            console.log(result)
             expect(result).toBeTruthy()
             expect(result).not.toBe('')
             expect(result).toBe('TEST-0028')

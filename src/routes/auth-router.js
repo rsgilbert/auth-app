@@ -17,7 +17,6 @@ authRouter.post('/login',
     expressValidatorHandler,
     passport.authenticate('local'),
     async (req, res) => {
-        console.log(req.user)
         return res.send('successfully logged in')
     })
 

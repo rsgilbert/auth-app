@@ -4,6 +4,9 @@ const mailService = require('../src/services/mail/mail-service.js')
 const mailServiceSpy = requiredJest.spyOn(mailService, 'sendEmailNotification')
     // @ts-ignore
     .mockResolvedValue()
+const noseries = require('../src/services/no-series.js')
+const noseriesSpy = requiredJest.spyOn(noseries, 'nextNoFor')
+    .mockResolvedValue('TEST-USER-XXX')
 const { selectUserByEmail, confirmUserByEmail, insertUser } = require("../src/services/user/user-service")
 const db = require('../src/db.js')
 
@@ -69,14 +72,15 @@ describe('user service', () => {
     })
 
     describe('insertUser(email, plainPassword)', () => {
-        test('throws error if user exists and has been confirmed', async () => {
-            let stmt = 'INSERT INTO users(user_id, email, confirmed) VALUES(?, ?, 1)'
-            let values = ['TEST-USER-0001', 'test1@mail.com']
-            await db.query(conn => conn.query(stmt, values))
+        test('throws error if user exists and has been confirmed', () => {
             expect(async () => {
-                await insertUser('test1@mail.com', 'pass')
+                const email = 'test1@mail.com'
+                const user = await insertUser(email, 'pass')
+                await confirmUserByEmail(email, user.confirmation_code)
+                await insertUser(email, 'pass2')
             }).rejects.toThrowError()
         })
+
         test('sends email to user', async () => {
             await insertUser('test1@mail.com', 'pass')
             expect(mailServiceSpy).toHaveBeenCalled()
@@ -93,18 +97,18 @@ describe('user service', () => {
             let stmt = 'SELECT COUNT(*) AS count FROM users'
             let values = []
             let [result] = await db.query(c => c.query(stmt, values))
-            const beforeCount = result.count 
+            const beforeCount = result.count
             await insertUser('test8@mail.com', 'pass');
             // after count
             [result] = await db.query(c => c.query(stmt, values))
             const afterCount = result.count
-            expect(afterCount).toBe(beforeCount+1)
+            expect(afterCount).toBe(beforeCount + 1)
         })
         test('updates existing database record if a user with given email exists but has not yet been confirmed', async () => {
             const email = 'test7@mail.com'
             let stmt = 'INSERT INTO users (user_id, email, hashed_password, confirmation_code) VALUES (?,?,?,?) RETURNING *'
             let values = ['TEST-USER-0006', email, 'xxxx', '1234']
-            const [initialUser] = await db.query(c=>c.query(stmt, values))
+            const [initialUser] = await db.query(c => c.query(stmt, values))
             const updatedUser = await insertUser(email, 'pass5')
             let user = await selectUserByEmail(email)
             expect(user).toMatchObject({

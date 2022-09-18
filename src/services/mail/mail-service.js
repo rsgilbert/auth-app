@@ -28,7 +28,6 @@ async function sendEmailNotification({ recipientList, ccList, subject, html }) {
         subject,
         html
     });
-    console.log('Message sent', info.messageId, info);
     return info;
 }
 
