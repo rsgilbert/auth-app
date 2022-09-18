@@ -15,7 +15,11 @@ authRouter.post('/login',
     body("email").isEmail(),
     body("password").isLength({ min: 2 }),
     expressValidatorHandler,
-    passport.authenticate('local'))
+    passport.authenticate('local'), async (req, res) => {
+        // let userCookie = `user=${JSON.stringify(req.user)}`
+        // res.setHeader('set-cookie', userCookie)
+        res.status(http.statusCodes.OK).json({})
+    })
 
 authRouter.post('/signup',
     body("email").isEmail(),
